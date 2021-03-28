@@ -8,6 +8,7 @@ import csv
 MISP_TA='attack_data/threat-actor.json'
 SECTOR='attack_data/sector.json'
 COMPMAY='attack_data/companies_sorted.csv'
+MISP_TOOL='attack_data/mitre-enterprise-attack-tool.json'
 
 
 tool_dir_name = sys.argv[1]
@@ -17,13 +18,33 @@ def get_tools():
     if (os.path.exists(const.OUT_TOOL_FILE)):
         os.remove(const.OUT_TOOL_FILE)
 
+    tool_list = []
+
     for file in glob(tool_dir_name + '/*.json'):
         json_open = open(file, 'r')
         data = json.load(json_open)
         tool_name = data.get('objects')[0].get('name')
+        tool_list.append(tool_name+ const.NEWLINE)
 
+    json_open = open(MISP_TOOL, 'r')
+    data = json.load(json_open)
+    values = data.get('values')
+    for value in values:
+        tool_name=value.get('value').split('-')[0].strip()
+        tool_list.append(tool_name+ const.NEWLINE)
+
+        meta = value.get('meta')
+        groups = []
+        if meta is not None:
+            synonyms = meta.get('synonyms')
+
+        if synonyms is not None:
+            for synonym in synonyms:
+                tool_list.append(synonym.split('-')[0].strip()+ const.NEWLINE)
+
+    for tool_name in tool_list:
         with open(const.OUT_TOOL_FILE, "a", encoding='utf8') as out:
-            out.write(tool_name+const.NEWLINE)
+            out.writelines(list(set(tool_list)))
 
 
 def get_groups():
@@ -88,8 +109,8 @@ def get_company():
             for row in reader:
                 out.write(row[1] + const.NEWLINE)
 
-# get_tools()
+get_tools()
 # get_groups()
 # get_sectors()
-get_company()
+#get_company()
 

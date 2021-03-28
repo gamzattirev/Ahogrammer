@@ -4,7 +4,7 @@ import sys, os
 QUESTION_TOOL='What are the tools used in the attack?'
 QUESTION_GROUP='Who is the attack group?'
 
-INPUT_FILE='input/attack_report_raw.txt'
+INPUT_FILE='input/sample_attack_report_raw.txt'
 TRAIN_RATE=0.8
 VUL_RATE=0.1
 LABEL_TRAIN='train'
