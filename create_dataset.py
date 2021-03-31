@@ -28,6 +28,8 @@ VAL_FILE='dev.txt'
 TEST_FILE='test.txt'
 MAX_WORD=200
 
+LONG_SENTENSE='long.txt'
+
 def get_tools():
     tools=[]
     with open(const.OUT_TOOL_FILE, 'r') as file:
@@ -87,10 +89,12 @@ def create_dataset(label,num_data):
 
             sentenses = row.split(SENTENSE_DELIMETER)
             for sentense in sentenses:
-                if len(sentense) >=MAX_WORD:
+                words= sentense.split(WORD_DELIMETER)
+                if len(words) >=MAX_WORD:
+                    with open(LONG_SENTENSE, "a", encoding='utf8') as out_sentense:
+                        out_sentense.write(sentense + const.NEWLINE)
                     continue
 
-                words= sentense.split(WORD_DELIMETER)
                 prev=''
                 prev_org=''
                 dataset=[]
@@ -172,6 +176,9 @@ if os.path.exists(VAL_FILE):
 
 if os.path.exists(TEST_FILE):
     os.remove(TEST_FILE)
+
+if os.path.exists(LONG_SENTENSE):
+    os.remove(LONG_SENTENSE)
 
 create_dataset(LABEL_TRAIN, num_train)
 create_dataset(LABEL_VAL, num_val)
