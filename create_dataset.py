@@ -8,7 +8,7 @@ INPUT_FILE='input/attack_report_raw.txt'
 TRAIN_RATE=0.8
 VUL_RATE=0.1
 LABEL_TRAIN='train'
-LABEL_VAL='valid'
+LABEL_VAL='dev'
 LABEL_TEST='test'
 
 SENTENSE_DELIMETER=". "
@@ -24,8 +24,9 @@ LAVEL_I_COM='I-CM'
 LAVEL_OTHER='O'
 DATASET_DELIMETER="\t"
 TRAIN_FILE='train.txt'
-VAL_FILE='valid.txt'
+VAL_FILE='dev.txt'
 TEST_FILE='test.txt'
+MAX_WORD=200
 
 def get_tools():
     tools=[]
@@ -86,6 +87,9 @@ def create_dataset(label,num_data):
 
             sentenses = row.split(SENTENSE_DELIMETER)
             for sentense in sentenses:
+                if len(sentense) >=MAX_WORD:
+                    continue
+
                 words= sentense.split(WORD_DELIMETER)
                 prev=''
                 prev_org=''
