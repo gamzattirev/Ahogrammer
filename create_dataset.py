@@ -27,8 +27,9 @@ TRAIN_FILE='train.txt'
 VAL_FILE='dev.txt'
 TEST_FILE='test.txt'
 MAX_WORD=200
-
+NUM_SENTENSE_PER_ROW=100
 LONG_SENTENSE='long.txt'
+O_RATE=0.2
 
 def get_tools():
     tools=[]
@@ -66,21 +67,23 @@ def get_companies():
             companies.append(company)
         return companies
 
-def create_dataset(label,num_data):
+def create_dataset(mode,num_data):
 
     cnt=0
 
     data=[]
+    data_O=[]
 
-    if label == LABEL_TRAIN:
+
+    if mode == LABEL_TRAIN:
         data=lines[:num_train-1]
-    elif label==LABEL_VAL:
+    elif mode==LABEL_VAL:
         data=lines[num_train:num_train+num_val]
 
     else:
         data = lines[num_train+num_val:]
 
-    with open(label+'.txt', "a", encoding='utf8') as out:
+    with open(mode+'.txt', "a", encoding='utf8') as out:
 
         for row in data:
 
@@ -88,11 +91,12 @@ def create_dataset(label,num_data):
                 return
 
             sentenses = row.split(SENTENSE_DELIMETER)
+            #print(str(len(sentenses)))
             for sentense in sentenses:
                 words= sentense.split(WORD_DELIMETER)
                 if len(words) >=MAX_WORD:
-                    with open(LONG_SENTENSE, "a", encoding='utf8') as out_sentense:
-                        out_sentense.write(sentense + const.NEWLINE)
+                    # with open(LONG_SENTENSE, "a", encoding='utf8') as out_sentense:
+                    #     out_sentense.write(sentense + const.NEWLINE)
                     continue
 
                 prev=''
@@ -141,10 +145,29 @@ def create_dataset(label,num_data):
                     prev_org=word
                     index=index+1
 
-                out.writelines(dataset)
-                out.write('.'+ DATASET_DELIMETER+LAVEL_OTHER +const.NEWLINE+const.NEWLINE)
+                num_data=0
+                for item in dataset:
+                    label=item.split(DATASET_DELIMETER)[1].strip()
+                    if label!=LAVEL_OTHER:
+                        num_data=num_data+1
+
+                if num_data == 0:
+                    data_O.append(dataset)
+
+                else:
+                    out.writelines(dataset)
+                    out.write('.'+ DATASET_DELIMETER+LAVEL_OTHER +const.NEWLINE+const.NEWLINE)
+
 
         cnt = cnt + 1
+
+    O_num = len(data_O)
+    max_O_num = int(O_num* O_RATE)
+
+    with open(mode + '.txt', "a", encoding='utf8') as out:
+        for dataset in data_O[:max_O_num]:
+            out.writelines(dataset)
+            out.write('.' + DATASET_DELIMETER + LAVEL_OTHER + const.NEWLINE + const.NEWLINE)
 
 with open(INPUT_FILE, 'r') as file:
     lines = file.readlines()
@@ -159,6 +182,7 @@ if len(sys.argv)>1:
 num_train=round(context*TRAIN_RATE)
 num_val=round(context*VUL_RATE)
 num_test=context-num_train-num_val
+
 print("num_train:" +str(num_train))
 print("num_val:" +str(num_val))
 print("num_test:" +str(num_test))
