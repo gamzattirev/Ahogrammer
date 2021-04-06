@@ -26,17 +26,18 @@ DATASET_DELIMETER="\t"
 TRAIN_FILE='train.txt'
 VAL_FILE='dev.txt'
 TEST_FILE='test.txt'
-MAX_WORD=200
+MAX_WORD_NUM=200
+MAX_WORD=1000
 NUM_SENTENSE_PER_ROW=100
 LONG_SENTENSE='long.txt'
-O_RATE=0.2
+O_RATE=1
 
 def get_tools():
     tools=[]
     with open(const.OUT_TOOL_FILE, 'r') as file:
         for row in file:
             tool = row.replace(const.NEWLINE, "")
-            tool = tool.lower()
+            #tool = tool.lower()
             tools.append(tool)
         return tools
 
@@ -45,7 +46,7 @@ def get_groups():
     with open(const.OUT_GROUP_FILE, 'r') as file:
         for row in file:
             group = row.replace(const.NEWLINE, "")
-            group=group.lower()
+            #group=group.lower()
             groups.append(group)
         return groups
 
@@ -54,7 +55,7 @@ def get_sectors():
     with open(const.OUT_SECTOR_FILE, 'r') as file:
         for row in file:
             sector = row.replace(const.NEWLINE, "")
-            sector=sector.lower()
+            #sector=sector.lower()
             sectors.append(sector)
         return sectors
 
@@ -63,7 +64,7 @@ def get_companies():
     with open(const.OUT_COMPANY_FILE, 'r') as file:
         for row in file:
             company = row.replace(const.NEWLINE, "")
-            company=company.lower()
+            #company=company.lower()
             companies.append(company)
         return companies
 
@@ -94,10 +95,17 @@ def create_dataset(mode,num_data):
             #print(str(len(sentenses)))
             for sentense in sentenses:
                 words= sentense.split(WORD_DELIMETER)
-                if len(words) >=MAX_WORD:
+                if len(words) >=MAX_WORD_NUM:
                     # with open(LONG_SENTENSE, "a", encoding='utf8') as out_sentense:
                     #     out_sentense.write(sentense + const.NEWLINE)
                     continue
+
+                len_word=0
+                for word in words:
+                    len_word=len_word+len(word)
+                if len_word >= MAX_WORD:
+                    continue
+
 
                 prev=''
                 prev_org=''
@@ -106,7 +114,8 @@ def create_dataset(mode,num_data):
                 for word in words:
                     lavel = LAVEL_OTHER
                     word=word.strip()
-                    tmp_word=word.lower()
+                    #tmp_word=word.lower()
+                    tmp_word = word
 
                     # groups
                     if tmp_word in groups:
