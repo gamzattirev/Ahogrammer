@@ -1,5 +1,8 @@
 import const
 import sys, os
+import string
+import random
+
 
 QUESTION_TOOL='What are the tools used in the attack?'
 QUESTION_GROUP='Who is the attack group?'
@@ -31,6 +34,8 @@ MAX_WORD=1000
 NUM_SENTENSE_PER_ROW=100
 LONG_SENTENSE='long.txt'
 O_RATE=1
+EXCLUSIVE_LIST=['at']
+LEN_RANDOM=10
 
 def get_tools():
     tools=[]
@@ -67,6 +72,10 @@ def get_companies():
             #company=company.lower()
             companies.append(company)
         return companies
+
+def random_str(word):
+    dat = string.digits + string.ascii_lowercase + string.ascii_uppercase
+    return ''.join([random.choice(dat) for i in range(len(word))]).lower()
 
 def create_dataset(mode,num_data):
 
@@ -123,14 +132,17 @@ def create_dataset(mode,num_data):
 
                     elif prev+WORD_DELIMETER+tmp_word in groups:
                         lavel = LAVEL_I_GROUP
+                        #prev_org = random_str(prev_org)
                         dataset[index-1]=prev_org + DATASET_DELIMETER + LAVEL_GROUP + const.NEWLINE
 
                     # tools
-                    elif tmp_word in tools:
+
+                    elif tmp_word in tools and tmp_word.lower() not in EXCLUSIVE_LIST:
                         lavel=LAVEL_TOOL
 
                     elif prev + WORD_DELIMETER + tmp_word in tools:
                         lavel = LAVEL_I_TOOL
+                        #prev_org = random_str(prev_org)
                         dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_TOOL + const.NEWLINE
 
                     # # sectors
@@ -148,6 +160,10 @@ def create_dataset(mode,num_data):
                     # elif prev + WORD_DELIMETER + tmp_word in companies:
                     #     lavel = LAVEL_I_COM
                     #     dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_COM + const.NEWLINE
+
+                    if lavel !=LAVEL_OTHER:
+                        #word=random_str(word)
+                        word=word
 
                     dataset.append(word + DATASET_DELIMETER + lavel + const.NEWLINE)
                     prev=tmp_word
