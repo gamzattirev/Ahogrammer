@@ -7,7 +7,7 @@ import random
 QUESTION_TOOL='What are the tools used in the attack?'
 QUESTION_GROUP='Who is the attack group?'
 
-INPUT_FILE='input/attack_report_raw.txt'
+INPUT_FILE='input/sample_attack_report_raw.txt'
 TRAIN_RATE=0.8
 VUL_RATE=0.1
 LABEL_TRAIN='train'
@@ -77,13 +77,13 @@ def random_str(word):
     dat = string.digits + string.ascii_lowercase + string.ascii_uppercase
     return ''.join([random.choice(dat) for i in range(len(word))]).lower()
 
-def create_dataset(mode,num_data):
+def create_dataset(mode,num_dataset):
 
     cnt=0
 
     data=[]
     data_O=[]
-
+    data_tag = []
 
     if mode == LABEL_TRAIN:
         data=lines[:num_train-1]
@@ -93,96 +93,93 @@ def create_dataset(mode,num_data):
     else:
         data = lines[num_train+num_val:]
 
-    with open(mode+'.txt', "a", encoding='utf8') as out:
+    for row in data:
 
-        for row in data:
+        if cnt>num_dataset:
+            print("Exceed "+str(num_data))
+            return
 
-            if cnt>num_data:
-                return
+        sentenses = row.split(SENTENSE_DELIMETER)
+        #print(str(len(sentenses)))
+        for sentense in sentenses:
+            words= sentense.split(WORD_DELIMETER)
+            if len(words) >=MAX_WORD_NUM:
+                # with open(LONG_SENTENSE, "a", encoding='utf8') as out_sentense:
+                #     out_sentense.write(sentense + const.NEWLINE)
+                continue
 
-            sentenses = row.split(SENTENSE_DELIMETER)
-            #print(str(len(sentenses)))
-            for sentense in sentenses:
-                words= sentense.split(WORD_DELIMETER)
-                if len(words) >=MAX_WORD_NUM:
-                    # with open(LONG_SENTENSE, "a", encoding='utf8') as out_sentense:
-                    #     out_sentense.write(sentense + const.NEWLINE)
-                    continue
-
-                len_word=0
-                for word in words:
-                    len_word=len_word+len(word)
-                if len_word >= MAX_WORD:
-                    continue
+            len_word=0
+            for word in words:
+                len_word=len_word+len(word)
+            if len_word >= MAX_WORD:
+                continue
 
 
-                prev=''
-                prev_org=''
-                dataset=[]
-                index=0
-                for word in words:
-                    lavel = LAVEL_OTHER
-                    word=word.strip()
-                    #tmp_word=word.lower()
-                    tmp_word = word
+            prev=''
+            prev_org=''
+            dataset=[]
+            index=0
+            for word in words:
+                lavel = LAVEL_OTHER
+                word=word.strip()
+                #tmp_word=word.lower()
+                tmp_word = word
 
-                    # groups
-                    if tmp_word in groups:
-                        lavel=LAVEL_GROUP
+                # groups
+                if tmp_word in groups:
+                    lavel=LAVEL_GROUP
 
-                    elif prev+WORD_DELIMETER+tmp_word in groups:
-                        lavel = LAVEL_I_GROUP
-                        #prev_org = random_str(prev_org)
-                        dataset[index-1]=prev_org + DATASET_DELIMETER + LAVEL_GROUP + const.NEWLINE
+                elif prev+WORD_DELIMETER+tmp_word in groups:
+                    lavel = LAVEL_I_GROUP
+                    #prev_org = random_str(prev_org)
+                    dataset[index-1]=prev_org + DATASET_DELIMETER + LAVEL_GROUP + const.NEWLINE
 
-                    # tools
+                # tools
 
-                    elif tmp_word in tools and tmp_word.lower() not in EXCLUSIVE_LIST:
-                        lavel=LAVEL_TOOL
+                elif tmp_word in tools and tmp_word.lower() not in EXCLUSIVE_LIST:
+                    lavel=LAVEL_TOOL
 
-                    elif prev + WORD_DELIMETER + tmp_word in tools:
-                        lavel = LAVEL_I_TOOL
-                        #prev_org = random_str(prev_org)
-                        dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_TOOL + const.NEWLINE
+                elif prev + WORD_DELIMETER + tmp_word in tools:
+                    lavel = LAVEL_I_TOOL
+                    #prev_org = random_str(prev_org)
+                    dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_TOOL + const.NEWLINE
 
-                    # # sectors
-                    # elif tmp_word in sectors:
-                    #     lavel = LAVEL_SEC
-                    #
-                    # elif prev + WORD_DELIMETER + tmp_word in sectors:
-                    #     lavel = LAVEL_I_SEC
-                    #     dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_SEC + const.NEWLINE
-                    #
-                    # # companies
-                    # elif tmp_word in companies:
-                    #     lavel = LAVEL_COM
-                    #
-                    # elif prev + WORD_DELIMETER + tmp_word in companies:
-                    #     lavel = LAVEL_I_COM
-                    #     dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_COM + const.NEWLINE
+                # # sectors
+                # elif tmp_word in sectors:
+                #     lavel = LAVEL_SEC
+                #
+                # elif prev + WORD_DELIMETER + tmp_word in sectors:
+                #     lavel = LAVEL_I_SEC
+                #     dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_SEC + const.NEWLINE
+                #
+                # # companies
+                # elif tmp_word in companies:
+                #     lavel = LAVEL_COM
+                #
+                # elif prev + WORD_DELIMETER + tmp_word in companies:
+                #     lavel = LAVEL_I_COM
+                #     dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_COM + const.NEWLINE
 
-                    if lavel !=LAVEL_OTHER:
-                        #word=random_str(word)
-                        word=word
+                if lavel !=LAVEL_OTHER:
+                    #word=random_str(word)
+                    word=word
 
-                    dataset.append(word + DATASET_DELIMETER + lavel + const.NEWLINE)
-                    prev=tmp_word
-                    prev_org=word
-                    index=index+1
+                dataset.append(word + DATASET_DELIMETER + lavel + const.NEWLINE)
+                prev=tmp_word
+                prev_org=word
+                index=index+1
 
-                num_data=0
-                for item in dataset:
-                    label=item.split(DATASET_DELIMETER)[1].strip()
-                    if label!=LAVEL_OTHER:
-                        num_data=num_data+1
+            num_data=0
+            for item in dataset:
+                label=item.split(DATASET_DELIMETER)[1].strip()
+                if label!=LAVEL_OTHER:
+                    num_data=num_data+1
 
-                if num_data == 0:
-                    data_O.append(dataset)
+            if num_data == 0:
+                data_O.append(dataset)
 
-                else:
-                    out.writelines(dataset)
-                    out.write('.'+ DATASET_DELIMETER+LAVEL_OTHER +const.NEWLINE+const.NEWLINE)
-
+            else:
+                data_tag.append(dataset)
 
         cnt = cnt + 1
 
@@ -190,9 +187,17 @@ def create_dataset(mode,num_data):
     max_O_num = int(O_num* O_RATE)
 
     with open(mode + '.txt', "a", encoding='utf8') as out:
+        for dataset in data_tag:
+            out.writelines(dataset)
+            out.write('.' + DATASET_DELIMETER + LAVEL_OTHER + const.NEWLINE + const.NEWLINE)
+
+    with open(mode + '.txt', "a", encoding='utf8') as out:
         for dataset in data_O[:max_O_num]:
             out.writelines(dataset)
             out.write('.' + DATASET_DELIMETER + LAVEL_OTHER + const.NEWLINE + const.NEWLINE)
+
+    print(mode)
+    return(mode)
 
 with open(INPUT_FILE, 'r') as file:
     lines = file.readlines()
