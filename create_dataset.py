@@ -36,6 +36,7 @@ LONG_SENTENSE='long.txt'
 O_RATE=1
 EXCLUSIVE_LIST=['at']
 LEN_RANDOM=10
+alldataset={}
 
 def get_tools():
     tools=[]
@@ -186,17 +187,8 @@ def create_dataset(mode,num_dataset):
     O_num = len(data_O)
     max_O_num = int(O_num* O_RATE)
 
-    with open(mode + '.txt', "a", encoding='utf8') as out:
-        for dataset in data_tag:
-            out.writelines(dataset)
-            out.write('.' + DATASET_DELIMETER + LAVEL_OTHER + const.NEWLINE + const.NEWLINE)
+    alldataset[mode]=data_tag+data_O[:max_O_num]
 
-    with open(mode + '.txt', "a", encoding='utf8') as out:
-        for dataset in data_O[:max_O_num]:
-            out.writelines(dataset)
-            out.write('.' + DATASET_DELIMETER + LAVEL_OTHER + const.NEWLINE + const.NEWLINE)
-
-    print(mode)
     return(mode)
 
 with open(INPUT_FILE, 'r') as file:
@@ -237,3 +229,18 @@ if os.path.exists(LONG_SENTENSE):
 create_dataset(LABEL_TRAIN, num_train)
 create_dataset(LABEL_VAL, num_val)
 create_dataset(LABEL_TEST, num_test)
+
+with open(LABEL_TRAIN + '.txt', "a", encoding='utf8') as out:
+    for dataset in alldataset[LABEL_TRAIN]:
+        out.writelines(dataset)
+        out.write('.' + DATASET_DELIMETER + LAVEL_OTHER + const.NEWLINE + const.NEWLINE)
+
+with open(LABEL_VAL + '.txt', "a", encoding='utf8') as out:
+    for dataset in alldataset[LABEL_VAL]:
+        out.writelines(dataset)
+        out.write('.' + DATASET_DELIMETER + LAVEL_OTHER + const.NEWLINE + const.NEWLINE)
+
+with open(LABEL_TEST + '.txt', "a", encoding='utf8') as out:
+    for dataset in alldataset[LABEL_TEST]:
+        out.writelines(dataset)
+        out.write('.' + DATASET_DELIMETER + LAVEL_OTHER + const.NEWLINE + const.NEWLINE)
