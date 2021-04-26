@@ -7,7 +7,7 @@ import random
 QUESTION_TOOL='What are the tools used in the attack?'
 QUESTION_GROUP='Who is the attack group?'
 
-INPUT_FILE='input/attack_report_raw.txt'
+INPUT_FILE='input/sample_attack_report_raw.txt'
 TRAIN_RATE=0.8
 VUL_RATE=0.1
 LABEL_TRAIN='train'
@@ -107,7 +107,7 @@ def create_dataset(mode,num_dataset, start_a, end_a, start_t, end_t):
         data = lines[num_train+num_val:]
 
     for row in data:
-
+        print("cnt: "+str(cnt))
         if cnt>num_dataset:
             print("Exceed "+str(num_data))
             return
@@ -135,7 +135,6 @@ def create_dataset(mode,num_dataset, start_a, end_a, start_t, end_t):
             for word in words:
                 lavel = LAVEL_OTHER
                 word=word.strip()
-                #tmp_word=word.lower()
                 tmp_word = word
 
                 # groups
@@ -144,7 +143,6 @@ def create_dataset(mode,num_dataset, start_a, end_a, start_t, end_t):
 
                 elif prev+WORD_DELIMETER+tmp_word in groups:
                     lavel = LAVEL_I_GROUP
-                    #prev_org = random_str(prev_org)
                     prev_org = get_random_TA(start_a, end_a)
                     dataset[index-1]=prev_org + DATASET_DELIMETER + LAVEL_GROUP + const.NEWLINE
 
@@ -155,7 +153,6 @@ def create_dataset(mode,num_dataset, start_a, end_a, start_t, end_t):
 
                 elif prev + WORD_DELIMETER + tmp_word in tools:
                     lavel = LAVEL_I_TOOL
-                    #prev_org = random_str(prev_org)
                     prev_org = get_random_TOOL(start_t,end_t)
                     dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_TOOL + const.NEWLINE
 
@@ -176,12 +173,12 @@ def create_dataset(mode,num_dataset, start_a, end_a, start_t, end_t):
                 #     dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_COM + const.NEWLINE
 
                 if lavel ==LAVEL_GROUP or lavel==LAVEL_I_GROUP:
-                    #word=random_str(word)
                     word=get_random_TA(start_a, end_a)
+                    word=word
 
                 elif lavel ==LAVEL_TOOL or lavel==LAVEL_I_TOOL:
-                    #word=random_str(word)
                     word=get_random_TOOL(start_t,end_t)
+                    word = word
 
 
                 dataset.append(word + DATASET_DELIMETER + lavel + const.NEWLINE)
@@ -238,7 +235,7 @@ dev_ta_end=train_ta_end+round(len(groups)*VUL_RATE)
 test_ta_end=len(groups)-1
 
 train_tl_end=round(len(tools)*TRAIN_RATE)
-dev_tl_end=train_ta_end+round(len(tools)*VUL_RATE)
+dev_tl_end=train_tl_end+round(len(tools)*VUL_RATE)
 test_tl_end=len(tools)-1
 
 if os.path.exists(TRAIN_FILE):
