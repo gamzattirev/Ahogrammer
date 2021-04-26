@@ -8,8 +8,8 @@ QUESTION_TOOL='What are the tools used in the attack?'
 QUESTION_GROUP='Who is the attack group?'
 
 INPUT_FILE='input/attack_report_raw.txt'
-TRAIN_RATE=0.8
-VUL_RATE=0.1
+TRAIN_RATE=0.6
+VUL_RATE=0.2
 LABEL_TRAIN='train'
 LABEL_VAL='dev'
 LABEL_TEST='test'
@@ -37,6 +37,15 @@ O_RATE=1
 EXCLUSIVE_LIST=['at']
 LEN_RANDOM=10
 alldataset={}
+
+KEYWORD_TOOL='tool'
+KEYWORD_GROUP='group'
+
+keyword_train={}
+keyword_train[KEYWORD_TOOL]=[]
+keyword_train[KEYWORD_GROUP]=[]
+
+keyword_dev={}
 
 def get_tools():
     tools=[]
@@ -78,19 +87,7 @@ def random_str(word):
     dat = string.digits + string.ascii_lowercase + string.ascii_uppercase
     return ''.join([random.choice(dat) for i in range(len(word))]).lower()
 
-def get_random_TOOL(start,end):
-    index=random.randint(start,end)
-    tool=tools[index]
-    name=tool.split(" ")[0]
-    return name
-
-def get_random_TA(start,end):
-    index=random.randint(start,end)
-    ta_name=groups[index]
-    name = ta_name.split(" ")[0]
-    return name
-
-def create_dataset(mode,num_dataset, start_a, end_a, start_t, end_t):
+def create_dataset(mode,num_dataset):
 
     cnt=0
 
@@ -145,8 +142,8 @@ def create_dataset(mode,num_dataset, start_a, end_a, start_t, end_t):
                 elif prev+WORD_DELIMETER+tmp_word in groups:
                     lavel = LAVEL_I_GROUP
                     #prev_org = random_str(prev_org)
-                    prev_org = get_random_TA(start_a, end_a)
-                    dataset[index-1]=prev_org + DATASET_DELIMETER + LAVEL_GROUP + const.NEWLINE
+                    dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_GROUP + const.NEWLINE
+
 
                 # tools
 
@@ -156,7 +153,6 @@ def create_dataset(mode,num_dataset, start_a, end_a, start_t, end_t):
                 elif prev + WORD_DELIMETER + tmp_word in tools:
                     lavel = LAVEL_I_TOOL
                     #prev_org = random_str(prev_org)
-                    prev_org = get_random_TOOL(start_t,end_t)
                     dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_TOOL + const.NEWLINE
 
                 # # sectors
@@ -175,14 +171,9 @@ def create_dataset(mode,num_dataset, start_a, end_a, start_t, end_t):
                 #     lavel = LAVEL_I_COM
                 #     dataset[index - 1] = prev_org + DATASET_DELIMETER + LAVEL_COM + const.NEWLINE
 
-                if lavel ==LAVEL_GROUP or lavel==LAVEL_I_GROUP:
-                    #word=random_str(word)
-                    word=get_random_TA(start_a, end_a)
-
-                elif lavel ==LAVEL_TOOL or lavel==LAVEL_I_TOOL:
-                    #word=random_str(word)
-                    word=get_random_TOOL(start_t,end_t)
-
+                if lavel != LAVEL_OTHER:
+                    # word=random_str(word)
+                    word = word
 
                 dataset.append(word + DATASET_DELIMETER + lavel + const.NEWLINE)
                 prev=tmp_word
@@ -199,7 +190,32 @@ def create_dataset(mode,num_dataset, start_a, end_a, start_t, end_t):
                 data_O.append(dataset)
 
             else:
-                data_tag.append(dataset)
+                flag=mode
+
+                if mode == LABEL_TRAIN:
+                    data_tag.append(dataset)
+                    for item in dataset:
+                        word = item.split(DATASET_DELIMETER)[0]
+                        label = item.split(DATASET_DELIMETER)[1].strip()
+                        if label == LAVEL_GROUP:
+                            keyword_train[KEYWORD_GROUP].append(word)
+                        elif label == LAVEL_TOOL:
+                            keyword_train[KEYWORD_TOOL].append(word)
+                else:
+                    for item in dataset:
+                        word = item.split(DATASET_DELIMETER)[0].strip()
+                        label = item.split(DATASET_DELIMETER)[1].strip()
+                        if (label == LAVEL_GROUP and word in keyword_train[KEYWORD_GROUP])\
+                                or (label == LAVEL_TOOL and word in keyword_train[KEYWORD_TOOL]):
+                            flag=LABEL_TRAIN
+                            print(word)
+                            continue
+
+                    if flag==mode:
+                        data_tag.append(dataset)
+                    else:
+                        alldataset[flag].append(dataset)
+
 
         cnt = cnt + 1
 
@@ -233,14 +249,6 @@ groups=get_groups()
 # sectors=get_sectors()
 # companies=get_companies()
 
-train_ta_end=round(len(groups)*TRAIN_RATE)
-dev_ta_end=train_ta_end+round(len(groups)*VUL_RATE)
-test_ta_end=len(groups)-1
-
-train_tl_end=round(len(tools)*TRAIN_RATE)
-dev_tl_end=train_ta_end+round(len(tools)*VUL_RATE)
-test_tl_end=len(tools)-1
-
 if os.path.exists(TRAIN_FILE):
     os.remove(TRAIN_FILE)
 
@@ -253,9 +261,9 @@ if os.path.exists(TEST_FILE):
 if os.path.exists(LONG_SENTENSE):
     os.remove(LONG_SENTENSE)
 
-create_dataset(LABEL_TRAIN, num_train,0,train_ta_end,0,train_tl_end)
-create_dataset(LABEL_VAL, num_val,train_ta_end+1,dev_ta_end,train_tl_end+1,dev_tl_end)
-create_dataset(LABEL_TEST, num_test,dev_ta_end+1,test_ta_end,dev_tl_end+1,test_tl_end)
+create_dataset(LABEL_TRAIN, num_train)
+create_dataset(LABEL_VAL, num_val)
+create_dataset(LABEL_TEST, num_test)
 
 with open(LABEL_TRAIN + '.txt', "a", encoding='utf8') as out:
     for dataset in alldataset[LABEL_TRAIN]:
